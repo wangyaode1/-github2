@@ -3,13 +3,17 @@ on:
   issues:
     types: [opened, edited, closed, reopened]
   pull_request:
-    types: [opened, edited, closed, reopened]
+    types: [opened, edited, closed, reopened, synchronize]
   push:
-    branches: [main, master]
+    # 所有分支的代码推送都触发通知
+  create:
+    # 监听创建分支/标签事件，分支过滤在 job 级别实现
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+    # 只处理分支创建，自动过滤标签创建
+    if: github.event_name != 'create' || github.event.ref_type == 'branch'
     steps:
       - name: Send message to Feishu
         uses: fjogeleit/http-request-action@v1
@@ -26,14 +30,14 @@ jobs:
                     "content": "GitHub 事件通知",
                     "tag": "plain_text"
                   },
-                  "template": "blue"
+                  "template": "${{ if github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged }}green{{ elif github.event_name == 'pull_request' && github.event.action == 'closed' }}red{{ elif github.event_name == 'issues' && github.event.action == 'closed' }}grey{{ elif github.event_name == 'create' }}yellow{{ else }}blue{{ end }}"
                 },
                 "elements": [
                   {
                     "tag": "div",
                     "text": {
                       "tag": "lark_md",
-                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ github.event.issue.html_url || github.event.pull_request.html_url || github.event.compare }})"
+                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }} · ${{ github.event.action }}\n**标题**：${{ github.event.pull_request.title || github.event.issue.title || github.event.head_commit.message || '创建新分支' }}\n**分支**：${{ if github.event_name == 'pull_request' }}${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}{{ elif github.ref_name }}${{ github.ref_name }}{{ else }}无关联分支{{ end }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ github.event.issue.html_url || github.event.pull_request.html_url || github.event.compare || format('https://github.com/{0}/tree/{1}', github.repository, github.ref_name) }})"
                     }
                   }
                 ]
