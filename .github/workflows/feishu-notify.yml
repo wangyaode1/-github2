@@ -1,0 +1,26 @@
+name: GitHub Notify to Feishu
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  pull_request:
+    types: [opened, edited, closed, reopened]
+  push:
+    branches: [main, master]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send message to Feishu
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.FEISHU_WEBHOOK }}
+          method: 'POST'
+          contentType: 'application/json'
+          data: >
+            {
+              "msg_type": "text",
+              "content": {
+                "text": "【GitHub通知】\n仓库：${{ github.repository }}\n事件：${{ github.event_name }}\n触发人：${{ github.actor }}\n详情：${{ github.event.html_url }}"
+              }
+            }
