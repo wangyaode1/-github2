@@ -15,6 +15,58 @@ jobs:
     # 只处理分支创建，自动过滤标签创建
     if: github.event_name != 'create' || github.event.ref_type == 'branch'
     steps:
+      - name: 计算通知变量
+        run: |
+          # 1. 计算卡片主题色
+          if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            CARD_COLOR="green"
+          elif [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.action }}" == "closed" ]]; then
+            CARD_COLOR="red"
+          elif [[ "${{ github.event_name }}" == "issues" && "${{ github.event.action }}" == "closed" ]]; then
+            CARD_COLOR="grey"
+          elif [[ "${{ github.event_name }}" == "create" ]]; then
+            CARD_COLOR="yellow"
+          else
+            CARD_COLOR="blue"
+          fi
+
+          # 2. 计算标题
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            TITLE_TEXT="${{ github.event.pull_request.title }}"
+          elif [[ "${{ github.event_name }}" == "issues" ]]; then
+            TITLE_TEXT="${{ github.event.issue.title }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            TITLE_TEXT="${{ github.event.head_commit.message }}"
+          else
+            TITLE_TEXT="创建新分支"
+          fi
+
+          # 3. 计算分支显示文本
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BRANCH_TEXT="${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}"
+          elif [[ -n "${{ github.ref_name }}" ]]; then
+            BRANCH_TEXT="${{ github.ref_name }}"
+          else
+            BRANCH_TEXT="无关联分支"
+          fi
+
+          # 4. 计算详情跳转链接
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            DETAIL_URL="${{ github.event.pull_request.html_url }}"
+          elif [[ "${{ github.event_name }}" == "issues" ]]; then
+            DETAIL_URL="${{ github.event.issue.html_url }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            DETAIL_URL="${{ github.event.compare }}"
+          else
+            DETAIL_URL="https://github.com/${{ github.repository }}/tree/${{ github.ref_name }}"
+          fi
+
+          # 写入环境变量
+          echo "CARD_COLOR=$CARD_COLOR" >> $GITHUB_ENV
+          echo "TITLE_TEXT=$TITLE_TEXT" >> $GITHUB_ENV
+          echo "BRANCH_TEXT=$BRANCH_TEXT" >> $GITHUB_ENV
+          echo "DETAIL_URL=$DETAIL_URL" >> $GITHUB_ENV
+
       - name: Send message to Feishu
         uses: fjogeleit/http-request-action@v1
         with:
@@ -30,14 +82,14 @@ jobs:
                     "content": "GitHub 事件通知",
                     "tag": "plain_text"
                   },
-                  "template": "${{ if github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged }}green{{ elif github.event_name == 'pull_request' && github.event.action == 'closed' }}red{{ elif github.event_name == 'issues' && github.event.action == 'closed' }}grey{{ elif github.event_name == 'create' }}yellow{{ else }}blue{{ end }}"
+                  "template": "${{ env.CARD_COLOR }}"
                 },
                 "elements": [
                   {
                     "tag": "div",
                     "text": {
                       "tag": "lark_md",
-                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }} · ${{ github.event.action }}\n**标题**：${{ github.event.pull_request.title || github.event.issue.title || github.event.head_commit.message || '创建新分支' }}\n**分支**：${{ if github.event_name == 'pull_request' }}${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}{{ elif github.ref_name }}${{ github.ref_name }}{{ else }}无关联分支{{ end }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ github.event.issue.html_url || github.event.pull_request.html_url || github.event.compare || format('https://github.com/{0}/tree/{1}', github.repository, github.ref_name) }})"
+                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }} · ${{ github.event.action }}\n**标题**：${{ env.TITLE_TEXT }}\n**分支**：${{ env.BRANCH_TEXT }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ env.DETAIL_URL }})"
                     }
                   }
                 ]
