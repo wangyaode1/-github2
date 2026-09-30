@@ -21,6 +21,6 @@ jobs:
             {
               "msg_type": "text",
               "content": {
-                "text": "【GitHub通知】\n仓库：${{ github.repository }}\n事件：${{ github.event_name }}\n触发人：${{ github.actor }}\n详情：${{ github.event.html_url }}"
+                "text": "【GitHub通知】\n仓库：${{ github.repository }}\n事件：${{ github.event_name }}\n触发人：${{ github.actor }}\n详情：${{ github.event.compare }}"
               }
             }
