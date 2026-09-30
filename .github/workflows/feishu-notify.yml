@@ -89,7 +89,7 @@ jobs:
                     "tag": "div",
                     "text": {
                       "tag": "lark_md",
-                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }} · ${{ github.event.action }}\n**标题**：${{ env.TITLE_TEXT }}\n**分支**：${{ env.BRANCH_TEXT }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ env.DETAIL_URL }})"
+                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }}  ${{ github.event.action }}\n**标题**：${{ env.TITLE_TEXT }}\n**分支**：${{ env.BRANCH_TEXT }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.actor }})\n**详情链接**：[点击查看](${{ env.DETAIL_URL }})"
                     }
                   }
                 ]
