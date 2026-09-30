@@ -19,8 +19,23 @@ jobs:
           contentType: 'application/json'
           data: >
             {
-              "msg_type": "text",
-              "content": {
-                "text": "【GitHub通知】\n仓库：${{ github.repository }}\n事件：${{ github.event_name }}\n触发人：${{ github.actor }}\n详情：${{ github.event.compare }}"
+              "msg_type": "interactive",
+              "card": {
+                "header": {
+                  "title": {
+                    "content": "GitHub 事件通知",
+                    "tag": "plain_text"
+                  },
+                  "template": "blue"
+                },
+                "elements": [
+                  {
+                    "tag": "div",
+                    "text": {
+                      "tag": "lark_md",
+                      "content": "**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }}\n**触发人**：[${{ github.actor }}](https://github.com/${{ github.event.compare }})\n**详情链接**：[点击查看](${{ github.event.issue.html_url || github.event.pull_request.html_url || github.event.compare }})"
+                    }
+                  }
+                ]
               }
             }
