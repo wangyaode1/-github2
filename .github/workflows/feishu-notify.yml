@@ -72,7 +72,7 @@ jobs:
           fi
 
           # 5. 拼接完整卡片内容（描述为空自动隐藏）
-          MARKDOWN="**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }} · ${{ github.event.action }}\n**标题**：$TITLE_TEXT"
+          MARKDOWN="**仓库**：${{ github.repository }}\n**事件**：${{ github.event_name }}   ${{ github.event.action }}\n**标题**：$TITLE_TEXT"
           if [[ -n "$DESC_TEXT" ]]; then
             MARKDOWN="$MARKDOWN\n**描述**：$DESC_TEXT"
           fi
